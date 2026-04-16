@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>AgriShield</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .main {
+            padding: 5px 50px 75px 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div class="nav-wrapper flex items-center justify-between p-4 bg-amber-300">
+    <a class="brand-logo flex items-center" href="#">
+    </a>
+        </div>
+        <h2 class="text-3xl font-semibold mt-6">{{context.name}}</h2>
+        <div class="flex mt-6">
+            <div class="w-2/3 pr-4">
+                <div class="flex bg-white shadow-lg rounded-lg overflow-hidden">
+                    <div class="w-1/2">
+                        <img src="{{context.image_url}}" class="h-full w-full object-cover">
+                    </div>
+                    <div class="w-1/2 p-4">
+                        <table class="w-full">
+                            <tr>
+                                <td class="py-2">Current Price</td>
+                                <td class="py-2 font-bold">₹ {{context.current_price}} / ql</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2">Prime Location</td>
+                                <td class="py-2 font-bold">{{context.prime_loc}}</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2">Crop Type</td>
+                                <td class="py-2 font-bold">{{context.type_c}}</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2">Export</td>
+                                <td class="py-2 font-bold">{{context.export}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-1/3 pl-4">
+                <div class="bg-gray-100 p-4 shadow-lg rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">Brief Forecast</h3>
+                    <table class="w-full">
+                        <tr>
+                            <td class="py-2">Min. crop price time</td>
+                            <td class="py-2">
+                                <h5>{{context.min_crop[0]}}</h5>
+                            </td>
+                            <td class="py-2">
+                                <h4>₹{{context.min_crop[1]}}</h4>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="py-2">Max. crop price time</td>
+                            <td class="py-2">
+                                <h5>{{context.max_crop[0]}}</h5>
+                            </td>
+                            <td class="py-2">
+                                <h4>₹{{context.max_crop[1]}}</h4>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h5 class="text-lg font-semibold mb-4">Forecast Trends</h5>
+            <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="py-3 px-4">Month</th>
+                        <th class="py-3 px-4">Price (per Qtl.)</th>
+                        <th class="py-3 px-4">Change</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in context.forecast_values %}
+                    <tr>
+                        <td class="py-3 px-4">{{item[0]}}</td>
+                        <td class="py-3 px-4">₹{{item[1]}}</td>
+                        <td class="py-3 px-4 flex items-center">{{item[2]}}%
+                            {% if item[2]>=0 %}
+                            <img src="../static/gain-icon.png" class="h-6 w-6 ml-2">
+                            {% else %}
+                            <img src="../static/loss-icon.png" class="h-6 w-6 ml-2">
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-8">
+            <div class="chartjs-wrapper flex justify-center">
+                <canvas id="chartjs-0" class="chartjs w-full max-w-4xl h-64"></canvas>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                new Chart(
+                    document.getElementById("chartjs-0"), {
+                        "type": "line",
+                        "data": {
+                            "labels": {{context.forecast_x | safe}},
+                            "datasets": [{
+                                "label": "Next year Price",
+                                "data": {{context.forecast_y}},
+                                "fill": false,
+                                "borderColor": "rgb(75, 192, 192)",
+                                "lineTension": 0.1
+                            }]
+                        },
+                        "options": {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                yAxes: [{
+                                    display: true,
+                                    ticks: {
+                                        suggestedMin: 1000,
+                                        stepSize: 200
+                                    }
+                                }]
+                            }
+                        }
+                    });
+            </script>
+        </div>
+
+        <div class="mt-8">
+            <div class="chartjs-wrapper flex justify-center">
+                <canvas id="chartjs-1" class="chartjs w-full max-w-4xl h-64"></canvas>
+            </div>
+            <script>
+                new Chart(document.getElementById("chartjs-1"), {
+                    "type": "line",
+                    "data": {
+                        "labels": {{context.previous_x | safe}},
+                        "datasets": [{
+                            "label": "Previous year price",
+                            "data": {{context.previous_y}},
+                            "fill": false,
+                            "borderColor": "rgb(75, 192, 192)",
+                            "lineTension": 0.1
+                        }]
+                    },
+                    "options": {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            yAxes: [{
+                                display: true,
+                                ticks: {
+                                    suggestedMin: 1000,
+                                    stepSize: 200
+                                }
+                            }]
+                        }
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</body>
+
+</html>
