@@ -33,10 +33,14 @@ def train():
         regressor = DecisionTreeRegressor(max_depth=depth)
         regressor.fit(X, Y)
         
+        accuracy = regressor.score(X, Y)
+        print(f"Accuracy (R^2 Score) for {crop}: {accuracy:.4f}")
+        
         trained_models[crop] = {
             'regressor': regressor,
             'X': X,
-            'Y': Y
+            'Y': Y,
+            'accuracy': accuracy
         }
 
     with open("model.pkl", "wb") as f:

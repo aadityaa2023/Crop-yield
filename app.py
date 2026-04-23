@@ -76,8 +76,9 @@ commodity_list = []
 
 class Commodity:
 
-    def __init__(self, csv_name, x=None, y=None, regressor=None):
+    def __init__(self, csv_name, x=None, y=None, regressor=None, accuracy=None):
         self.name = csv_name
+        self.accuracy = accuracy
         if regressor is not None:
             self.X = x
             self.Y = y
@@ -95,6 +96,7 @@ class Commodity:
             depth = random.randrange(7, 18)
             self.regressor = DecisionTreeRegressor(max_depth=depth)
             self.regressor.fit(self.X, self.Y)
+            self.accuracy = self.regressor.score(self.X, self.Y)
             # y_pred_tree = self.regressor.predict(X_test)
         # fsa=np.array([float(1),2019,45]).reshape(1,3)
         # fask=regressor_tree.predict(fsa)
@@ -127,10 +129,12 @@ class Commodity:
 
 @app.route('/')
 def index():
+    accuracies = {crop.getCropName().split('/')[-1].capitalize(): round((crop.accuracy or 0)*100, 2) for crop in commodity_list}
     context = {
         "top5": TopFiveHighYield(),
         "bottom5": TopFiveLowYield(),
-        "sixmonths": SixMonthsForecast()
+        "sixmonths": SixMonthsForecast(),
+        "accuracies": accuracies
     }
     return render_template('index.html', context=context)
 
@@ -439,7 +443,7 @@ if __name__ == "__main__":
         for crop_slug, path in commodity_dict.items():
             if crop_slug in trained_data:
                 data = trained_data[crop_slug]
-                obj = Commodity(path, x=data['X'], y=data['Y'], regressor=data['regressor'])
+                obj = Commodity(path, x=data['X'], y=data['Y'], regressor=data['regressor'], accuracy=data.get('accuracy'))
                 commodity_list.append(obj)
             else:
                 # Fallback if a specific crop is missing from pickle

@@ -95,6 +95,17 @@
             </div>
         </div>
 
+        <!-- Model Accuracy Chart -->
+        <div class="glass-card mb-12">
+            <h3 class="text-2xl font-bold mb-6 flex items-center text-green-800">
+                <span class="w-2 h-8 bg-green-600 rounded-full mr-3"></span>
+                Model Authentication (Accuracy)
+            </h3>
+            <div class="relative h-80 w-full">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+        </div>
+
         <!-- Lower Efficiency Table -->
         <div class="glass-card mb-12">
             <h3 class="text-2xl font-bold mb-6 flex items-center text-red-800">
@@ -136,6 +147,7 @@
         <p>&copy; 2026 AgriYield Intelligence Systems. All datasets authenticated via data.gov.in</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
         
@@ -160,6 +172,46 @@
             tickerIdx = (tickerIdx + 1) % 5;
             updateTicker(tickerIdx);
         }, 5000);
+
+        // Chart.js implementation for Model Accuracy
+        const ctx = document.getElementById('accuracyChart').getContext('2d');
+        const accuracyData = {{ context.accuracies | tojson | safe }};
+        const labels = Object.keys(accuracyData);
+        const data = Object.values(accuracyData);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Accuracy (R² Score %)',
+                    data: data,
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Accuracy (%)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
     </script>
 </body>
 
