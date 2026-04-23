@@ -2,98 +2,124 @@
 <html lang="en">
 
 <head>
-    <title>AgriShield</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{context.name}} Yield Analysis</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        .main {
-            padding: 5px 50px 75px 50px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 
-<body>
-    <div class="main">
-        <div class="nav-wrapper flex items-center justify-between p-4 bg-amber-300">
-    <a class="brand-logo flex items-center" href="#">
-    </a>
-        </div>
-        <h2 class="text-3xl font-semibold mt-6">{{context.name}}</h2>
-        <div class="flex mt-6">
-            <div class="w-2/3 pr-4">
-                <div class="flex bg-white shadow-lg rounded-lg overflow-hidden">
-                    <div class="w-1/2">
-                        <img src="{{context.image_url}}" class="h-full w-full object-cover">
-                    </div>
-                    <div class="w-1/2 p-4">
-                        <table class="w-full">
-                            <tr>
-                                <td class="py-2">Current Price</td>
-                                <td class="py-2 font-bold">₹ {{context.current_price}} / ql</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2">Prime Location</td>
-                                <td class="py-2 font-bold">{{context.prime_loc}}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2">Crop Type</td>
-                                <td class="py-2 font-bold">{{context.type_c}}</td>
-                            </tr>
-                            <tr>
-                                <td class="py-2">Export</td>
-                                <td class="py-2 font-bold">{{context.export}}</td>
-                            </tr>
-                        </table>
+<body class="p-4 md:p-10">
+    <div class="max-w-7xl mx-auto">
+        <nav class="mb-8 flex items-center text-sm font-medium text-gray-500">
+            <a href="/" class="hover:text-green-600">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-800">{{context.name}}</span>
+        </nav>
+
+        <header class="flex flex-col md:flex-row items-end justify-between mb-12">
+            <div>
+                <h1 class="text-5xl font-black text-gray-900 tracking-tighter">{{context.name}} <span class="text-green-600">Analytics</span></h1>
+                <p class="text-gray-500 mt-2">Detailed yield forecasting and historical trend analysis</p>
+            </div>
+            <div class="mt-4 md:mt-0 text-right">
+                <span class="text-xs font-bold uppercase text-gray-400 block mb-1">Current Forecast</span>
+                <div class="text-4xl font-black text-green-700">{{context.current_yield}} <span class="text-sm font-normal text-gray-500">mt/ha</span></div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <!-- Main Info Card -->
+            <div class="lg:col-span-2 glass-card p-0 overflow-hidden flex flex-col md:flex-row">
+                <div class="md:w-1/2">
+                    <img src="{{context.image_url}}" class="h-full w-full object-cover min-h-[300px]" alt="{{context.name}}">
+                </div>
+                <div class="md:w-1/2 p-8 flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-6 text-gray-800">Operational Profile</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase block">Prime Regions</span>
+                            <span class="text-lg font-semibold text-gray-700">{{context.prime_loc}}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 uppercase block">Crop Type</span>
+                                <span class="badge-gain mt-1">{{context.type_c}}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 uppercase block">Primary Exports</span>
+                                <span class="text-sm font-medium text-gray-600 block mt-1">{{context.export}}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="w-1/3 pl-4">
-                <div class="bg-gray-100 p-4 shadow-lg rounded-lg">
-                    <h3 class="text-xl font-semibold mb-4">Brief Forecast</h3>
-                    <table class="w-full">
-                        <tr>
-                            <td class="py-2">Min. crop price time</td>
-                            <td class="py-2">
-                                <h5>{{context.min_crop[0]}}</h5>
-                            </td>
-                            <td class="py-2">
-                                <h4>₹{{context.min_crop[1]}}</h4>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="py-2">Max. crop price time</td>
-                            <td class="py-2">
-                                <h5>{{context.max_crop[0]}}</h5>
-                            </td>
-                            <td class="py-2">
-                                <h4>₹{{context.max_crop[1]}}</h4>
-                            </td>
-                        </tr>
-                    </table>
+            <!-- Summary Stats -->
+            <div class="space-y-6">
+                <div class="glass-card bg-white border-l-8 border-green-500">
+                    <h4 class="text-sm font-bold text-gray-400 uppercase mb-4">Peak Yield Window</h4>
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl font-black text-gray-800">{{context.max_crop[0]}}</span>
+                        <div class="text-right">
+                            <span class="text-2xl font-black text-green-600">{{context.max_crop[1]}}</span>
+                            <span class="text-xs block text-gray-400">mt/ha</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card bg-white border-l-8 border-red-500">
+                    <h4 class="text-sm font-bold text-gray-400 uppercase mb-4">Minimum Yield Window</h4>
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl font-black text-gray-800">{{context.min_crop[0]}}</span>
+                        <div class="text-right">
+                            <span class="text-2xl font-black text-red-600">{{context.min_crop[1]}}</span>
+                            <span class="text-xs block text-gray-400">mt/ha</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-8">
-            <h5 class="text-lg font-semibold mb-4">Forecast Trends</h5>
-            <table class="min-w-full bg-white rounded-lg overflow-hidden">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="py-3 px-4">Month</th>
-                        <th class="py-3 px-4">Price (per Qtl.)</th>
-                        <th class="py-3 px-4">Change</th>
+        <!-- Charts Section -->
+        <h3 class="text-2xl font-bold mb-8">Visualization & Trends</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div class="glass-card">
+                <h4 class="text-lg font-bold mb-6">Yield Forecast (Next 12 Months)</h4>
+                <div class="h-80">
+                    <canvas id="yieldForecastChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card">
+                <h4 class="text-lg font-bold mb-6">Historical Performance (12 Months)</h4>
+                <div class="h-80">
+                    <canvas id="historicalYieldChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Data Table -->
+        <div class="glass-card mb-20">
+            <h3 class="text-xl font-bold mb-6">Monthly Prediction Matrix</h3>
+            <table class="w-full">
+                <thead>
+                    <tr class="text-left text-gray-400 text-xs uppercase tracking-wider">
+                        <th class="pb-4">Time Period</th>
+                        <th class="pb-4 text-center">Estimated Yield (mt/ha)</th>
+                        <th class="pb-4 text-right">Projected Change (%)</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in context.forecast_values %}
-                    <tr>
-                        <td class="py-3 px-4">{{item[0]}}</td>
-                        <td class="py-3 px-4">₹{{item[1]}}</td>
-                        <td class="py-3 px-4 flex items-center">{{item[2]}}%
-                            {% if item[2]>=0 %}
-                            <img src="../static/gain-icon.png" class="h-6 w-6 ml-2">
+                    <tr class="border-b border-gray-50 hover:bg-green-50 transition-colors">
+                        <td class="py-4 font-semibold text-gray-700">{{item[0]}}</td>
+                        <td class="py-4 font-bold text-gray-900 text-center">{{item[1]}}</td>
+                        <td class="py-4 text-right">
+                            {% if item[2] >= 0 %}
+                            <span class="badge-gain">+{{item[2]}}%</span>
                             {% else %}
-                            <img src="../static/loss-icon.png" class="h-6 w-6 ml-2">
+                            <span class="badge-loss">{{item[2]}}%</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -101,77 +127,77 @@
                 </tbody>
             </table>
         </div>
-
-        <div class="mt-8">
-            <div class="chartjs-wrapper flex justify-center">
-                <canvas id="chartjs-0" class="chartjs w-full max-w-4xl h-64"></canvas>
-            </div>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script>
-                new Chart(
-                    document.getElementById("chartjs-0"), {
-                        "type": "line",
-                        "data": {
-                            "labels": {{context.forecast_x | safe}},
-                            "datasets": [{
-                                "label": "Next year Price",
-                                "data": {{context.forecast_y}},
-                                "fill": false,
-                                "borderColor": "rgb(75, 192, 192)",
-                                "lineTension": 0.1
-                            }]
-                        },
-                        "options": {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                yAxes: [{
-                                    display: true,
-                                    ticks: {
-                                        suggestedMin: 1000,
-                                        stepSize: 200
-                                    }
-                                }]
-                            }
-                        }
-                    });
-            </script>
-        </div>
-
-        <div class="mt-8">
-            <div class="chartjs-wrapper flex justify-center">
-                <canvas id="chartjs-1" class="chartjs w-full max-w-4xl h-64"></canvas>
-            </div>
-            <script>
-                new Chart(document.getElementById("chartjs-1"), {
-                    "type": "line",
-                    "data": {
-                        "labels": {{context.previous_x | safe}},
-                        "datasets": [{
-                            "label": "Previous year price",
-                            "data": {{context.previous_y}},
-                            "fill": false,
-                            "borderColor": "rgb(75, 192, 192)",
-                            "lineTension": 0.1
-                        }]
-                    },
-                    "options": {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            yAxes: [{
-                                display: true,
-                                ticks: {
-                                    suggestedMin: 1000,
-                                    stepSize: 200
-                                }
-                            }]
-                        }
-                    }
-                });
-            </script>
-        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctxForecast = document.getElementById('yieldForecastChart').getContext('2d');
+        const forecastChart = new Chart(ctxForecast, {
+            type: 'line',
+            data: {
+                labels: JSON.parse('{{context.forecast_x | tojson | safe}}'),
+                datasets: [{
+                    label: 'Projected Yield (mt/ha)',
+                    data: JSON.parse('{{context.forecast_y | tojson | safe}}'),
+                    borderColor: '#2e7d32',
+                    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                    borderWidth: 4,
+                    pointBackgroundColor: '#2e7d32',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: { display: false }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        const ctxHistory = document.getElementById('historicalYieldChart').getContext('2d');
+        const historyChart = new Chart(ctxHistory, {
+            type: 'bar',
+            data: {
+                labels: JSON.parse('{{context.previous_x | tojson | safe}}'),
+                datasets: [{
+                    label: 'Historical Yield (mt/ha)',
+                    data: JSON.parse('{{context.previous_y | tojson | safe}}'),
+                    backgroundColor: 'rgba(46, 125, 50, 0.5)',
+                    borderRadius: 8,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        grid: { color: '#f0f0f0' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

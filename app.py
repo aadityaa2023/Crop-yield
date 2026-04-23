@@ -2,12 +2,14 @@
 
 from flask import Flask, render_template
 from flask_cors import CORS, cross_origin
-from flask_ngrok import run_with_ngrok
+# from flask_ngrok import run_with_ngrok
 import numpy as np
 import pandas as pd
 from datetime import datetime
 import crops
 import random
+import pickle
+import os
 
 # import matplotlib.pyplot as plt
 
@@ -43,52 +45,57 @@ commodity_dict = {
 }
 
 annual_rainfall = [29, 21, 37.5, 30.7, 52.6, 150, 299, 251.7, 179.2, 70.5, 39.8, 10.9]
+# Base yields in Metric Tons per Hectare (approximate averages)
 base = {
-    "Paddy": 1245.5,
-    "Arhar": 3200,
-    "Bajra": 1175,
-    "Barley": 980,
-    "Copra": 5100,
-    "Cotton": 3600,
-    "Sesamum": 4200,
-    "Gram": 2800,
-    "Groundnut": 3700,
-    "Jowar": 1520,
-    "Maize": 1175,
-    "Masoor": 2800,
-    "Moong": 3500,
-    "Niger": 3500,
-    "Ragi": 1500,
-    "Rape": 2500,
-    "Jute": 1675,
-    "Safflower": 2500,
-    "Soyabean": 2200,
-    "Sugarcane": 2250,
-    "Sunflower": 3700,
-    "Urad": 4300,
-    "Wheat": 1350
-
+    "Paddy": 2.5,
+    "Arhar": 0.8,
+    "Bajra": 1.2,
+    "Barley": 2.1,
+    "Copra": 0.9,
+    "Cotton": 0.5,
+    "Sesamum": 0.4,
+    "Gram": 0.9,
+    "Groundnut": 1.5,
+    "Jowar": 1.0,
+    "Maize": 2.5,
+    "Masoor": 0.7,
+    "Moong": 0.5,
+    "Niger": 0.3,
+    "Ragi": 1.4,
+    "Rape": 1.2,
+    "Jute": 2.3,
+    "Safflower": 0.6,
+    "Soyabean": 1.1,
+    "Sugarcane": 70.0,
+    "Sunflower": 0.7,
+    "Urad": 0.6,
+    "Wheat": 3.2
 }
 commodity_list = []
 
 
 class Commodity:
 
-    def __init__(self, csv_name):
+    def __init__(self, csv_name, x=None, y=None, regressor=None):
         self.name = csv_name
-        dataset = pd.read_csv(csv_name)
-        self.X = dataset.iloc[:, :-1].values
-        self.Y = dataset.iloc[:, 3].values
+        if regressor is not None:
+            self.X = x
+            self.Y = y
+            self.regressor = regressor
+        else:
+            dataset = pd.read_csv(csv_name)
+            self.X = dataset.iloc[:, :-1].values
+            self.Y = dataset.iloc[:, 3].values
 
-        #from sklearn.model_selection import train_test_split
-        #X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1, random_state=0)
+            # from sklearn.model_selection import train_test_split
+            # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1, random_state=0)
 
-        # Fitting decision tree regression to dataset
-        from sklearn.tree import DecisionTreeRegressor
-        depth = random.randrange(7,18)
-        self.regressor = DecisionTreeRegressor(max_depth=depth)
-        self.regressor.fit(self.X, self.Y)
-        #y_pred_tree = self.regressor.predict(X_test)
+            # Fitting decision tree regression to dataset
+            from sklearn.tree import DecisionTreeRegressor
+            depth = random.randrange(7, 18)
+            self.regressor = DecisionTreeRegressor(max_depth=depth)
+            self.regressor.fit(self.X, self.Y)
+            # y_pred_tree = self.regressor.predict(X_test)
         # fsa=np.array([float(1),2019,45]).reshape(1,3)
         # fask=regressor_tree.predict(fsa)
 
@@ -121,8 +128,8 @@ class Commodity:
 @app.route('/')
 def index():
     context = {
-        "top5": TopFiveWinners(),
-        "bottom5": TopFiveLosers(),
+        "top5": TopFiveHighYield(),
+        "bottom5": TopFiveLowYield(),
         "sixmonths": SixMonthsForecast()
     }
     return render_template('index.html', context=context)
@@ -136,7 +143,7 @@ def crop_profile(name):
     forecast_y = [i[1] for i in forecast_crop_values]
     previous_x = [i[0] for i in prev_crop_values]
     previous_y = [i[1] for i in prev_crop_values]
-    current_price = CurrentMonth(name)
+    current_yield = CurrentYield(name)
     #print(max_crop)
     #print(min_crop)
     #print(forecast_crop_values)
@@ -150,12 +157,12 @@ def crop_profile(name):
         "max_crop": max_crop,
         "min_crop": min_crop,
         "forecast_values": forecast_crop_values,
-        "forecast_x": str(forecast_x),
-        "forecast_y":forecast_y,
+        "forecast_x": forecast_x,
+        "forecast_y": forecast_y,
         "previous_values": prev_crop_values,
         "previous_x":previous_x,
         "previous_y":previous_y,
-        "current_price": current_price,
+        "current_yield": current_yield,
         "image_url":crop_data[0],
         "prime_loc":crop_data[1],
         "type_c":crop_data[2],
@@ -173,7 +180,7 @@ def ticker(item, number):
     context = str(data[n][i])
 
     if i == 2 or i == 5:
-        context = '₹' + context
+        context = context + ' mt/ha'
     elif i == 3 or i == 6:
 
         context = context + '%'
@@ -182,7 +189,7 @@ def ticker(item, number):
     return context
 
 
-def TopFiveWinners():
+def TopFiveHighYield():
     current_month = datetime.now().month
     current_year = datetime.now().year
     current_rainfall = annual_rainfall[current_month - 1]
@@ -210,7 +217,7 @@ def TopFiveWinners():
     return to_send
 
 
-def TopFiveLosers():
+def TopFiveLowYield():
     current_month = datetime.now().month
     current_year = datetime.now().year
     current_rainfall = annual_rainfall[current_month - 1]
@@ -250,20 +257,20 @@ def SixMonthsForecast():
         k=0
         for j in crop:
             time = j[0]
-            price = j[1]
+            yield_val = j[1]
             change = j[2]
             if k==0:
-                month1.append((price,change,i.getCropName().split("/")[1],time))
+                month1.append((yield_val,change,i.getCropName().split("/")[1],time))
             elif k==1:
-                month2.append((price,change,i.getCropName().split("/")[1],time))
+                month2.append((yield_val,change,i.getCropName().split("/")[1],time))
             elif k==2:
-                month3.append((price,change,i.getCropName().split("/")[1],time))
+                month3.append((yield_val,change,i.getCropName().split("/")[1],time))
             elif k==3:
-                month4.append((price,change,i.getCropName().split("/")[1],time))
+                month4.append((yield_val,change,i.getCropName().split("/")[1],time))
             elif k==4:
-                month5.append((price,change,i.getCropName().split("/")[1],time))
+                month5.append((yield_val,change,i.getCropName().split("/")[1],time))
             elif k==5:
-                month6.append((price,change,i.getCropName().split("/")[1],time))
+                month6.append((yield_val,change,i.getCropName().split("/")[1],time))
             k+=1
     month1.sort()
     month2.sort()
@@ -308,17 +315,17 @@ def SixMonthsForecastHelper(name):
         wpis.append(current_predict)
         change.append(((current_predict - current_wpi) * 100) / current_wpi)
 
-    crop_price = []
+    crop_yield = []
     for i in range(0, len(wpis)):
         m, y, r = month_with_year[i]
         x = datetime(y, m, 1)
         x = x.strftime("%b %y")
-        crop_price.append([x, round((wpis[i]* base[name.capitalize()]) / 100, 2) , round(change[i], 2)])
+        crop_yield.append([x, round((wpis[i]* base[name.capitalize()]) / 100, 2) , round(change[i], 2)])
 
-   # print("Crop_Price: ", crop_price)
-    return crop_price
+   # print("Crop_Yield: ", crop_yield)
+    return crop_yield
 
-def CurrentMonth(name):
+def CurrentYield(name):
     current_month = datetime.now().month
     current_year = datetime.now().year
     current_rainfall = annual_rainfall[current_month - 1]
@@ -329,8 +336,8 @@ def CurrentMonth(name):
             commodity = i
             break
     current_wpi = commodity.getPredictedValue([float(current_month), current_year, current_rainfall])
-    current_price = (base[name.capitalize()]*current_wpi)/100
-    return current_price
+    current_yield = (base[name.capitalize()]*current_wpi)/100
+    return current_yield
 
 def TwelveMonthsForecast(name):
     current_month = datetime.now().month
@@ -371,12 +378,12 @@ def TwelveMonthsForecast(name):
     min_month, min_year, r2 = month_with_year[min_index]
     min_value = min_value * base[name.capitalize()] / 100
     max_value = max_value * base[name.capitalize()] / 100
-    crop_price = []
+    crop_yield = []
     for i in range(0, len(wpis)):
         m, y, r = month_with_year[i]
         x = datetime(y, m, 1)
         x = x.strftime("%b %y")
-        crop_price.append([x, round((wpis[i]* base[name.capitalize()]) / 100, 2) , round(change[i], 2)])
+        crop_yield.append([x, round((wpis[i]* base[name.capitalize()]) / 100, 2) , round(change[i], 2)])
    # print("forecasr", wpis)
     x = datetime(max_year,max_month,1)
     x = x.strftime("%b %y")
@@ -385,7 +392,7 @@ def TwelveMonthsForecast(name):
     x = x.strftime("%b %y")
     min_crop = [x, round(min_value,2)]
 
-    return max_crop, min_crop, crop_price
+    return max_crop, min_crop, crop_yield
 
 
 def TwelveMonthPrevious(name):
@@ -395,7 +402,7 @@ def TwelveMonthPrevious(name):
     current_rainfall = annual_rainfall[current_month - 1]
     commodity = commodity_list[0]
     wpis = []
-    crop_price = []
+    crop_yield = []
     for i in commodity_list:
         if name == str(i):
             commodity = i
@@ -415,61 +422,76 @@ def TwelveMonthPrevious(name):
         m, y, r = month_with_year[i]
         x = datetime(y,m,1)
         x = x.strftime("%b %y")
-        crop_price.append([x, round((wpis[i]* base[name.capitalize()]) / 100, 2)])
+        crop_yield.append([x, round((wpis[i]* base[name.capitalize()]) / 100, 2)])
    # print("previous ", wpis)
-    new_crop_price =[]
-    for i in range(len(crop_price)-1,-1,-1):
-        new_crop_price.append(crop_price[i])
-    return new_crop_price
+    new_crop_yield =[]
+    for i in range(len(crop_yield)-1,-1,-1):
+        new_crop_yield.append(crop_yield[i])
+    return new_crop_yield
 
 
 if __name__ == "__main__":
-    arhar = Commodity(commodity_dict["arhar"])
-    commodity_list.append(arhar)
-    bajra = Commodity(commodity_dict["bajra"])
-    commodity_list.append(bajra)
-    barley = Commodity(commodity_dict["barley"])
-    commodity_list.append(barley)
-    copra = Commodity(commodity_dict["copra"])
-    commodity_list.append(copra)
-    cotton = Commodity(commodity_dict["cotton"])
-    commodity_list.append(cotton)
-    sesamum = Commodity(commodity_dict["sesamum"])
-    commodity_list.append(sesamum)
-    gram = Commodity(commodity_dict["gram"])
-    commodity_list.append(gram)
-    groundnut = Commodity(commodity_dict["groundnut"])
-    commodity_list.append(groundnut)
-    jowar = Commodity(commodity_dict["jowar"])
-    commodity_list.append(jowar)
-    maize = Commodity(commodity_dict["maize"])
-    commodity_list.append(maize)
-    masoor = Commodity(commodity_dict["masoor"])
-    commodity_list.append(masoor)
-    moong = Commodity(commodity_dict["moong"])
-    commodity_list.append(moong)
-    niger = Commodity(commodity_dict["niger"])
-    commodity_list.append(niger)
-    paddy = Commodity(commodity_dict["paddy"])
-    commodity_list.append(paddy)
-    ragi = Commodity(commodity_dict["ragi"])
-    commodity_list.append(ragi)
-    rape = Commodity(commodity_dict["rape"])
-    commodity_list.append(rape)
-    jute = Commodity(commodity_dict["jute"])
-    commodity_list.append(jute)
-    safflower = Commodity(commodity_dict["safflower"])
-    commodity_list.append(safflower)
-    soyabean = Commodity(commodity_dict["soyabean"])
-    commodity_list.append(soyabean)
-    sugarcane = Commodity(commodity_dict["sugarcane"])
-    commodity_list.append(sugarcane)
-    sunflower = Commodity(commodity_dict["sunflower"])
-    commodity_list.append(sunflower)
-    urad = Commodity(commodity_dict["urad"])
-    commodity_list.append(urad)
-    wheat = Commodity(commodity_dict["wheat"])
-    commodity_list.append(wheat)
+    if os.path.exists("model.pkl"):
+        print("Loading pre-trained models from model.pkl...")
+        with open("model.pkl", "rb") as f:
+            trained_data = pickle.load(f)
+        
+        for crop_slug, path in commodity_dict.items():
+            if crop_slug in trained_data:
+                data = trained_data[crop_slug]
+                obj = Commodity(path, x=data['X'], y=data['Y'], regressor=data['regressor'])
+                commodity_list.append(obj)
+            else:
+                # Fallback if a specific crop is missing from pickle
+                commodity_list.append(Commodity(path))
+    else:
+        print("model.pkl not found. Training models from scratch (this may take a while)...")
+        arhar = Commodity(commodity_dict["arhar"])
+        commodity_list.append(arhar)
+        bajra = Commodity(commodity_dict["bajra"])
+        commodity_list.append(bajra)
+        barley = Commodity(commodity_dict["barley"])
+        commodity_list.append(barley)
+        copra = Commodity(commodity_dict["copra"])
+        commodity_list.append(copra)
+        cotton = Commodity(commodity_dict["cotton"])
+        commodity_list.append(cotton)
+        sesamum = Commodity(commodity_dict["sesamum"])
+        commodity_list.append(sesamum)
+        gram = Commodity(commodity_dict["gram"])
+        commodity_list.append(gram)
+        groundnut = Commodity(commodity_dict["groundnut"])
+        commodity_list.append(groundnut)
+        jowar = Commodity(commodity_dict["jowar"])
+        commodity_list.append(jowar)
+        maize = Commodity(commodity_dict["maize"])
+        commodity_list.append(maize)
+        masoor = Commodity(commodity_dict["masoor"])
+        commodity_list.append(masoor)
+        moong = Commodity(commodity_dict["moong"])
+        commodity_list.append(moong)
+        niger = Commodity(commodity_dict["niger"])
+        commodity_list.append(niger)
+        paddy = Commodity(commodity_dict["paddy"])
+        commodity_list.append(paddy)
+        ragi = Commodity(commodity_dict["ragi"])
+        commodity_list.append(ragi)
+        rape = Commodity(commodity_dict["rape"])
+        commodity_list.append(rape)
+        jute = Commodity(commodity_dict["jute"])
+        commodity_list.append(jute)
+        safflower = Commodity(commodity_dict["safflower"])
+        commodity_list.append(safflower)
+        soyabean = Commodity(commodity_dict["soyabean"])
+        commodity_list.append(soyabean)
+        sugarcane = Commodity(commodity_dict["sugarcane"])
+        commodity_list.append(sugarcane)
+        sunflower = Commodity(commodity_dict["sunflower"])
+        commodity_list.append(sunflower)
+        urad = Commodity(commodity_dict["urad"])
+        commodity_list.append(urad)
+        wheat = Commodity(commodity_dict["wheat"])
+        commodity_list.append(wheat)
 
     app.run()
 

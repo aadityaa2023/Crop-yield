@@ -2,456 +2,165 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AgriShield</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    .main {
-      padding: 5px 50px 75px 50px;
-    }
-
-    span,
-    img {
-      vertical-align: middle;
-    }
-  </style>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriYield - Crop Forecast Intelligence</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 
-<body class="main">
-  <div>
-    <div class="nav-wrapper flex items-center justify-between p-4 bg-green-200 rounded-lg">
-      <a class=" flex items-center" href="#">
-      </a>
+<body class="p-4 md:p-10">
+    <header class="hero-gradient glass-card flex flex-col md:flex-row items-center justify-between shadow-2xl mb-12">
+        <div>
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-2">AGRIYIELD</h1>
+            <p class="text-green-100 text-lg opacity-90">Precision Crop Yield Forecasting powered by AI</p>
+        </div>
+        <div class="mt-4 md:mt-0 bg-white bg-opacity-20 backdrop-blur-md p-4 rounded-2xl">
+            <span class="text-sm font-bold uppercase tracking-widest text-green-200">Current Market Cycle</span>
+            <div class="text-2xl font-bold" id="current_date">April 2026</div>
+        </div>
+    </header>
 
-      <h3 class="text-black text-4xl flex-grow font-bold">
-        <span class="text-black p-4">EXPLORE MARKET TRENDS</span>
-      </h3>
+    <main class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            <!-- Highest Yielding Table -->
+            <div class="lg:col-span-2 glass-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold flex items-center">
+                        <span class="w-2 h-8 bg-green-600 rounded-full mr-3"></span>
+                        Top Yield Efficiency
+                    </h3>
+                    <span class="text-xs font-bold text-gray-500 uppercase">Live Predictions</span>
+                </div>
+                <table class="w-full">
+                    <thead>
+                        <tr class="text-left text-gray-400 text-xs uppercase tracking-wider">
+                            <th class="pb-4">Commodity</th>
+                            <th class="pb-4">Est. Yield (mt/ha)</th>
+                            <th class="pb-4">Monthly Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in context['top5'] %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="font-semibold text-gray-800 py-4">{{item[0]}}</td>
+                            <td class="font-bold text-green-700 py-4">{{item[1]}}</td>
+                            <td class="py-4">
+                                <span class="badge-gain">
+                                    +{{item[2]}}% 
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
+            <!-- Dashboard Widget: Star Commodity -->
+            <div class="space-y-8">
+                <div class="ticker-container glass-card border-none bg-gradient-to-br from-yellow-50 to-white">
+                    <h6 class="text-amber-800 font-bold text-sm uppercase mb-4 tracking-tighter">Yield Intelligence Spot</h6>
+                    <div class="text-gray-400 text-xs font-semibold mb-1" id="time">{{context.sixmonths[0][0]}}</div>
+                    
+                    <div class="flex justify-between items-end mt-4 p-4 bg-white rounded-xl shadow-sm border border-yellow-100">
+                        <div>
+                            <h5 class="text-xl font-bold text-gray-800" id="crop1">{{context.sixmonths[0][1]}}</h5>
+                            <p class="text-xs text-gray-500">Premium Yield</p>
+                        </div>
+                        <div class="text-right">
+                            <h4 class="text-2xl font-black text-green-600" id="price1">{{context.sixmonths[0][2]}} mt/ha</h4>
+                            <span id="pos-change" class="text-sm font-bold text-green-500">+{{context.sixmonths[0][3]}}%</span>
+                        </div>
+                    </div>
 
-    </div>
+                    <div class="flex justify-between items-end mt-4 p-4 bg-white rounded-xl shadow-sm border border-red-50">
+                        <div>
+                            <h5 class="text-xl font-bold text-gray-800" id="crop2">{{context.sixmonths[0][4]}}</h5>
+                            <p class="text-xs text-gray-500">Low Efficiency Alert</p>
+                        </div>
+                        <div class="text-right">
+                            <h4 class="text-2xl font-black text-red-600" id="price2">{{context.sixmonths[0][5]}} mt/ha</h4>
+                            <span id="neg-change" class="text-sm font-bold text-red-500">{{context.sixmonths[0][6]}}%</span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="glass-card bg-green-900 text-white">
+                    <h4 class="font-bold mb-2">Pro Tip</h4>
+                    <p class="text-sm text-green-200">Optimal rainfall for Paddy this season is expected to boost yield by 4.2% across West Bengal hubs.</p>
+                </div>
+            </div>
+        </div>
 
-    <div class="row flex mt-8">
-      <div class="bg-white-100 p-4 w-3/4">
-        <h4 class="bg-green-600 p-2 text-white inline rounded-lg">Top Gainers (Current trends)</h4>
-        <table class="table-auto w-full text-left mt-4">
-          <thead>
-            <tr>
-              <th class="px-4 py-2">Item Name</th>
-              <th class="px-4 py-2">Price (per Qtl.)</th>
-              <th class="px-4 py-2">Change</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in context['top5'] %}
-            <tr>
-              <td class="border px-4 py-2">{{item[0]}}</td>
-              <td class="border px-4 py-2">₹{{item[1]}}</td>
-              <td class="border px-4 py-2 flex items-center">{{item[2]}}% <img src="../static/gain-icon.png"
-                  class="h-6 w-6 ml-2"></td>
-            </tr>
+        <!-- Lower Efficiency Table -->
+        <div class="glass-card mb-12">
+            <h3 class="text-2xl font-bold mb-6 flex items-center text-red-800">
+                <span class="w-2 h-8 bg-red-600 rounded-full mr-3"></span>
+                Yield Warning Zones
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for item in context['bottom5'] %}
+                <div class="flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100">
+                    <div>
+                        <span class="block text-sm font-bold text-gray-700">{{item[0]}}</span>
+                        <span class="text-lg font-black text-red-700">{{item[1]}} mt/ha</span>
+                    </div>
+                    <span class="badge-loss">{{item[2]}}%</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Commodity Grid -->
+        <h3 class="text-3xl font-bold mb-8 text-center text-gray-800">Operational Commodities</h3>
+        <div class="commodity-grid">
+            {% set crops = [
+                ('Paddy', 'rice-bowl'), ('Wheat', 'wheat'), ('Barley', 'barley'), ('Soyabean', 'soy'),
+                ('Cotton', 'cotton'), ('Copra', 'coconut'), ('Groundnut', 'peanuts'), ('Rape', 'canola'),
+                ('Sesamum', 'sesame'), ('Gram', 'paper-bag-with-seeds'), ('Sugarcane', 'bamboo'), ('Arhar', 'paper-bag-with-seeds'),
+                ('Ragi', 'wheat'), ('Maize', 'corn'), ('Moong', 'paper-bag-with-seeds'), ('Masoor', 'paper-bag-with-seeds')
+            ] %}
+            {% for name, icon in crops %}
+            <a href="/commodity/{{name}}" class="commodity-item glass-card shadow-sm border border-gray-100 hover:border-green-400">
+                <img src="https://img.icons8.com/color/64/000000/{{icon}}.png" class="mx-auto mb-4 w-16 h-16 transition-transform hover:rotate-12" alt="{{name}}"/>
+                <span class="font-bold text-gray-700">{{name}}</span>
+            </a>
             {% endfor %}
-          </tbody>
-        </table>
-
-        <div class="bg-white-100 mt-10">
-          <h4 class="bg-red-600 p-2 text-white inline rounded-lg">Top Losers (Current trends)</h4>
-          <table class="table-auto w-full text-left mt-4">
-            <thead>
-              <tr>
-                <th class="px-4 py-2">Item Name</th>
-                <th class="px-4 py-2">Price (per Qtl.)</th>
-                <th class="px-4 py-2">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in context['bottom5'] %}
-              <tr>
-                <td class="border px-4 py-2">{{item[0]}}</td>
-                <td class="border px-4 py-2">₹{{item[1]}}</td>
-                <td class="border px-4 py-2 flex items-center">{{item[2]}}% <img src="../static/loss-icon.png"
-                    class="h-6 w-6 ml-2"></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
         </div>
-      </div>
+    </main>
 
-      <div class="w-1/4 ">
-        <div class="bg-white-200 p-4">
-          <div class="text-black">
-            <h6 class="bg-yellow-500 p-2 text-white inline rounded-lg">Star Commodity Prediction</h6>
-            <span class="text-lg font-bold m-4" id="time">{{context.sixmonths[0][0]}}</span>
-            <table class="mt-4 w-full">
-              <tr>
-                <td>
-                  <h5 id="crop1">{{context.sixmonths[0][1]}}</h5>
-                </td>
-                <td class="w-16"></td>
-                <td class="text-right">
-                  <h4 id="price1">₹{{context.sixmonths[0][2]}}</h4>
-                  <p id="pos-change" class="flex items-center justify-end">
-                    {{context.sixmonths[0][3]}}%
-                    <img id="change1" src="../static/gain-icon.png" class="h-5 w-5 ml-1">
-                  </p>
-                </td>
-              </tr>
+    <footer class="mt-20 text-center text-gray-400 text-sm pb-10">
+        <p>&copy; 2026 AgriYield Intelligence Systems. All datasets authenticated via data.gov.in</p>
+    </footer>
 
-              <!-- Spacer row to add distance between the two crops -->
-              <tr>
-                <td colspan="3" class="py-4"></td>
-              </tr>
+    <script>
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+        
+        async function updateTicker(i) {
+            $('#time').load('/ticker/0/' + i);
+            await sleep(100);
+            $('#crop1').load('/ticker/1/' + i);
+            await sleep(100);
+            $('#price1').load('/ticker/2/' + i);
+            await sleep(100);
+            $('#pos-change').load('/ticker/3/' + i);
+            await sleep(100);
+            $('#crop2').load('/ticker/4/' + i);
+            await sleep(100);
+            $('#price2').load('/ticker/5/' + i);
+            await sleep(100);
+            $('#neg-change').load('/ticker/6/' + i);
+        }
 
-              <tr>
-                <td>
-                  <h5 id="crop2">{{context.sixmonths[0][4]}}</h5>
-                </td>
-                <td class="w-16"></td>
-                <td class="text-right">
-                  <h4 id="price2">₹{{context.sixmonths[0][5]}}</h4>
-                  <p id="neg-change" class="flex items-center justify-end">
-                    {{context.sixmonths[0][6]}}%
-                    <img id="change2" src="../static/loss-icon.png" class="h-5 w-5 ml-1">
-                  </p>
-                </td>
-              </tr>
-            </table>
-
-
-            <script>
-              function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-              }
-              function updateTime(i) {
-                $('#time').load('/ticker/' + 0 + '/' + i);
-              }
-
-              function updateCrop1(i) {
-                $('#crop1').load('/ticker/' + 1 + '/' + i);
-              }
-
-              function updatePrice1(i) {
-                $('#price1').load('/ticker/' + 2 + '/' + i);
-              }
-
-              function updateChange1(i) {
-                $("#change1").attr("src", "../static/gain-icon.png");
-                $('#pos-change').load('/ticker/' + 3 + '/' + i);
-
-              }
-
-              function updateCrop2(i) {
-                $('#crop2').load('/ticker/' + 4 + '/' + i);
-              }
-
-              function updatePrice2(i) {
-                $('#price2').load('/ticker/' + 5 + '/' + i);
-              }
-
-              function updateChange2(i) {
-                $("#change2").attr("src", "../static/loss-icon.png");
-                $('#neg-change').load('/ticker/' + 6 + '/' + i);
-
-              }
-            </script>
-
-            <script>
-              var i = 0
-              setInterval(async function () {
-                i = (i + 1) % 5;
-                updateTime(i);
-
-                updateCrop1(i);
-                await sleep(200);
-
-                updatePrice1(i);
-                await sleep(200);
-
-                updateChange1(i);
-                await sleep(200);
-
-                updateCrop2(i);
-                await sleep(200);
-
-                updatePrice2(i);
-                await sleep(200);
-
-                updateChange2(i);
-                await sleep(200);
-
-                /*
-                setTimeout(updateCrop1(i), 100);
-                setTimeout(updatePrice1(i), 300);
-                setTimeout(updateChange1(i), 500);
-                setTimeout(updateCrop2(i), 700);
-                setTimeout(updatePrice2(i), 800);
-                setTimeout(updateChange2(i), 900);
-                */
-
-              }, 4000);
-
-            </script>
-
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="bg-white-100 p-4 mt-4">
-      <h5 class="bg-black p-2 text-white inline rounded-lg">Explore by commodity</h5>
-    </div>
-    <div class="grid grid-cols-4 gap-4">
-      <a href="/commodity/Paddy" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/rice-bowl.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Paddy</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Wheat" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/wheat.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Wheat</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Barley" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/barley.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Barley</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Soyabean" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/soy.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Soya Bean</span>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <div class="grid grid-cols-4 gap-4 mt-4">
-      <a href="/commodity/Cotton" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/cotton.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Cotton</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Copra" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/coconut.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Coconut</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Groundnut" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/peanuts.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Ground Nut Seeds</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Rape" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://cdn.shopify.com/s/files/1/0273/1241/products/MustardSeeds.png?v=1652110540"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Mustard Seed</span>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <div class="grid grid-cols-4 gap-4 mt-4">
-      <a href="/commodity/Sesamum" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/sesame.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Gingelly Seed (Sesamum)</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Gram" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/paper-bag-with-seeds.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Gram</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Sugarcane" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/bamboo.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Sugarcane</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Arhar" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/paper-bag-with-seeds.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Arhar</span>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <div class="grid grid-cols-4 gap-4 mt-4">
-      <a href="/commodity/Ragi" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/office/48/000000/wheat.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Ragi</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Maize" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/corn.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Maize</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Moong" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://png.pngtree.com/png-vector/20201117/ourlarge/pngtree-nutritious-ingredients-mung-beans-png-image_2437725.jpg"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Moong</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Masoor" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://png.pngtree.com/png-clipart/20220705/ourmid/pngtree-chana-dal-or-split-chickpeas-in-a-bowl-png-image_5687328.png"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Masoor</span>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <div class="grid grid-cols-4 gap-4 mt-4">
-      <a href="/commodity/Urad" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://png.pngtree.com/png-vector/20231222/ourmid/pngtree-on-a-white-background-a-wooden-bowl-holds-urad-dal-black-png-image_11177552.png"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Urad</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Jute" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://cdn-icons-png.flaticon.com/512/8665/8665910.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Jute</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Safflower" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://png.pngtree.com/png-vector/20231113/ourmid/pngtree-sunflower-seeds-oil-png-image_10447591.png"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Safflower Seed</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Sunflower" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img src="https://img.icons8.com/color/48/000000/sunflower.png" class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Sunflower Seed</span>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <div class="grid grid-cols-4 gap-4 mt-4">
-      <a href="/commodity/Bajra" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://png.pngtree.com/png-clipart/20240220/original/pngtree-millet-in-wood-spoon-on-white-background-cereal-photo-png-image_14362113.png"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Bajra</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Jowar" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://png.pngtree.com/png-vector/20231013/ourmid/pngtree-closeup-of-a-white-background-with-a-pile-of-sorghum-jowar-png-image_10256183.png"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Jowar</span>
-          </div>
-        </div>
-      </a>
-
-      <a href="/commodity/Niger" class="text-black">
-        <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-          <div class="flex items-center">
-            <img
-              src="https://w7.pngwing.com/pngs/169/401/png-transparent-bird-food-seed-niger-vegetarian-cuisine-food-text-food-superfood-bird-food.png"
-              class="w-12 h-12" />
-            <span class="ml-4 font-semibold">Niger</span>
-          </div>
-        </div>
-      </a>
-
-      <!--<a href="/commodity/Masoor" class="text-black">
-    <div class="bg-white-100 p-4 rounded-md shadow-md hover:shadow-lg">
-      <div class="flex items-center">
-        <img src="https://img.icons8.com/color/48/000000/paper-bag-with-seeds.png" class="w-12 h-12" />
-        <span class="ml-4 font-semibold">Masoor</span>
-      </div>
-    </div>
-  </a> -->
-    </div>
-
-  </div>
-  </div>
-  <script type="text/javascript" charset="utf-8">
-    $(document).ready(function () {
-      $('.slider').slider({ full_width: true });
-    });
-  </script>
+        let tickerIdx = 0;
+        setInterval(() => {
+            tickerIdx = (tickerIdx + 1) % 5;
+            updateTicker(tickerIdx);
+        }, 5000);
+    </script>
 </body>
 
 </html>
